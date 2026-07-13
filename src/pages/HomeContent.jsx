@@ -56,7 +56,7 @@ const SECTIONS = [
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'icon', label: 'Icon (Lucide name)', type: 'text', placeholder: 'Handshake' },
       { key: 'image', label: 'Image (optional)', type: 'image' },
-      { key: 'page', label: 'Page (home / our-process / both)', type: 'text', default: 'both' },
+      { key: 'page', label: 'Page', type: 'select', options: ['home', 'our-process', 'both'], default: 'both' },
     ],
   },
   {

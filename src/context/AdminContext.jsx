@@ -28,14 +28,48 @@ export const AdminProvider = ({ children }) => {
 
   // Initialize auth from localStorage
   useEffect(() => {
-    const storedAuth = localStorage.getItem('adminAuth');
-    const token = localStorage.getItem('adminToken');
-    if (storedAuth && token) {
-      const authData = JSON.parse(storedAuth);
-      setIsAuthenticated(authData.isAuthenticated);
-      setUser(authData.user);
-    }
-    setAuthInitialized(true);
+    const initAuth = async () => {
+      try {
+        const storedAuth = localStorage.getItem('adminAuth');
+        const token = localStorage.getItem('adminToken');
+        if (storedAuth && token) {
+          const authData = JSON.parse(storedAuth);
+          try {
+            // Verify the stored token with the backend before trusting it
+            const response = await authAPI.verify();
+            if (response && response.success !== false) {
+              setIsAuthenticated(authData.isAuthenticated);
+              setUser(authData.user);
+            } else {
+              // Server rejected the token — treat as logged out
+              localStorage.removeItem('adminAuth');
+              localStorage.removeItem('adminToken');
+              setIsAuthenticated(false);
+              setUser(null);
+            }
+          } catch (verifyError) {
+            if (verifyError.response) {
+              // 401/invalid token — clear auth and treat as logged out
+              localStorage.removeItem('adminAuth');
+              localStorage.removeItem('adminToken');
+              setIsAuthenticated(false);
+              setUser(null);
+            } else {
+              // Network error — keep stored state so a flaky connection doesn't log admins out
+              setIsAuthenticated(authData.isAuthenticated);
+              setUser(authData.user);
+            }
+          }
+        }
+      } catch (error) {
+        // Corrupt stored auth — remove it and treat as logged out
+        console.error('Failed to restore stored auth:', error);
+        localStorage.removeItem('adminAuth');
+      } finally {
+        setAuthInitialized(true);
+      }
+    };
+    initAuth();
   }, []);
 
   // Only load data AFTER authentication
@@ -82,14 +116,15 @@ export const AdminProvider = ({ children }) => {
       // Backend paginates (default 50, max 100 per page). Fetch every page so the
       // admin shows ALL products — otherwise older items (e.g. t-shirts) get
       // stranded on later pages and never appear. See productController.getAllProducts.
+      // all=true: admin also sees inactive products (backend verifies the token)
       const PAGE_SIZE = 100;
-      const first = await productsAPI.getAll({ limit: PAGE_SIZE, page: 1 });
+      const first = await productsAPI.getAll({ limit: PAGE_SIZE, page: 1, all: true });
       let productsData = first.products || [];
       const totalPages = first.totalPages || 1;
       if (totalPages > 1) {
         const rest = await Promise.all(
           Array.from({ length: totalPages - 1 }, (_, i) =>
-            productsAPI.getAll({ limit: PAGE_SIZE, page: i + 2 })
+            productsAPI.getAll({ limit: PAGE_SIZE, page: i + 2, all: true })
           )
         );
         rest.forEach(r => { productsData = productsData.concat(r.products || []); });
@@ -101,10 +136,6 @@ export const AdminProvider = ({ children }) => {
       setProducts(mappedProducts);
     } catch (error) {
       console.error('Failed to load products:', error);
-      const stored = localStorage.getItem('adminProducts');
-      if (stored) {
-        setProducts(JSON.parse(stored));
-      }
     } finally {
       setLoading(false);
     }
@@ -112,8 +143,22 @@ export const AdminProvider = ({ children }) => {
 
   const loadBlogs = async () => {
     try {
-      const response = await blogsAPI.getAll();
-      const blogsData = response.blogs || [];
+      // Backend paginates (default 20, max 100 per page). Fetch every page —
+      // same pattern as loadProducts — so older blogs stay visible/editable
+      // instead of being stranded beyond the first page.
+      // all=true: admin also sees unpublished blogs (backend verifies the token)
+      const PAGE_SIZE = 100;
+      const first = await blogsAPI.getAll({ limit: PAGE_SIZE, page: 1, all: true });
+      let blogsData = first.blogs || [];
+      const totalPages = first.totalPages || 1;
+      if (totalPages > 1) {
+        const rest = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            blogsAPI.getAll({ limit: PAGE_SIZE, page: i + 2, all: true })
+          )
+        );
+        rest.forEach(r => { blogsData = blogsData.concat(r.blogs || []); });
+      }
       const mappedBlogs = blogsData.map(b => ({
         ...b,
         id: b._id || b.id,
@@ -121,10 +166,6 @@ export const AdminProvider = ({ children }) => {
       setBlogs(mappedBlogs);
     } catch (error) {
       console.error('Failed to load blogs:', error);
-      const stored = localStorage.getItem('adminBlogs');
-      if (stored) {
-        setBlogs(JSON.parse(stored));
-      }
     }
   };
 
@@ -199,9 +240,11 @@ export const AdminProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await blogsAPI.create(blog);
+      // API returns { success, message, blog } — unwrap like addProduct does
+      const saved = response.blog || response;
       const newBlog = {
-        ...response,
-        id: response._id || response.id,
+        ...saved,
+        id: saved._id || saved.id,
       };
       setBlogs([...blogs, newBlog]);
       return newBlog;

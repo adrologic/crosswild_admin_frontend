@@ -199,6 +199,7 @@ const ProductModal = ({ product, onClose }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingSubImages, setUploadingSubImages] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -232,7 +233,8 @@ const ProductModal = ({ product, onClose }) => {
         tagline: product.tagline || '',
         description: product.description || '',
         shortDescription: product.shortDescription || '',
-        sections: product.sections || [],
+        // Assign a stable client-side id to each section so reordering keys correctly
+        sections: (product.sections || []).map(s => ({ ...s, id: s.id || crypto.randomUUID() })),
         productCategories: pCats,
         productType: productTypeId,
         image: product.image || '',
@@ -349,7 +351,7 @@ const ProductModal = ({ product, onClose }) => {
   const addSection = () => {
     setFormData(prev => ({
       ...prev,
-      sections: [...prev.sections, { title: '', content: '' }],
+      sections: [...prev.sections, { id: crypto.randomUUID(), title: '', content: '' }],
     }));
   };
 
@@ -538,6 +540,8 @@ const ProductModal = ({ product, onClose }) => {
 
     const productData = {
       ...formData,
+      // Strip the client-only section ids before sending to the server
+      sections: formData.sections.map(({ id, ...rest }) => rest),
       // Set legacy `category` from first selected category for backward compat
       category: formData.productCategories[0]?.category || '',
       price: 0,
@@ -545,6 +549,7 @@ const ProductModal = ({ product, onClose }) => {
     };
 
     try {
+      setSaving(true);
       if (product) {
         await updateProduct(product.id, productData);
       } else {
@@ -554,6 +559,8 @@ const ProductModal = ({ product, onClose }) => {
     } catch (error) {
       console.error('Failed to save product:', error);
       alert('Failed to save product. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -678,7 +685,7 @@ const ProductModal = ({ product, onClose }) => {
             {formData.sections.length > 0 && (
               <div className="space-y-4 mb-4">
                 {formData.sections.map((section, index) => (
-                  <div key={index} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
+                  <div key={section.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">
                         #{index + 1}
@@ -1453,9 +1460,9 @@ const ProductModal = ({ product, onClose }) => {
             <button
               type="submit"
               className="flex-1 py-3 px-4 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={uploading || uploadingSubImages}
+              disabled={saving || uploading || uploadingSubImages}
             >
-              {product ? 'Update Product' : 'Add Product'}
+              {saving ? 'Saving...' : product ? 'Update Product' : 'Add Product'}
             </button>
           </div>
         </form>

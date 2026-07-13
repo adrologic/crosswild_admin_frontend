@@ -186,8 +186,10 @@ const SEO = () => {
     try {
       setSaving(true);
       if (item.type === 'product')  await seoAPI.updateProductSEO(item._id, seoData);
-      if (item.type === 'blog')     await seoAPI.updateBlogSEO(item._id, seoData);
-      if (item.type === 'category') await seoAPI.updateCategorySEO(item._id, seoData);
+      else if (item.type === 'blog')     await seoAPI.updateBlogSEO(item._id, seoData);
+      else if (item.type === 'category') await seoAPI.updateCategorySEO(item._id, seoData);
+      // Never report success for a type we didn't actually save.
+      else throw new Error(`Unknown content type: ${item.type}`);
       await loadContentItems();
       await loadData();
       setEditingContent(null);
@@ -247,7 +249,11 @@ const SEO = () => {
   const saveGlobalSettings = async () => {
     try {
       setSaving(true);
-      await seoAPI.updateGlobalSettings(globalSettings);
+      // The loaded settings doc also carries localBusiness/faqItems, which are
+      // edited + saved separately via saveSchemas. Strip them here so "Save All
+      // Settings" can't overwrite schema edits with stale loaded values.
+      const { localBusiness: _lb, faqItems: _faq, ...settingsPayload } = globalSettings;
+      await seoAPI.updateGlobalSettings(settingsPayload);
       showMessage('success', 'Global SEO settings saved successfully');
     } catch (error) {
       showMessage('error', 'Failed to save settings');
@@ -788,7 +794,7 @@ const SEO = () => {
                         {item.hasSEO ? '✓ Optimized' : '✗ Missing'}
                       </span>
                       <button
-                        onClick={() => setEditingContent({ ...item, type: contentSubTab.slice(0, -1) })}
+                        onClick={() => setEditingContent({ ...item, type: { products: 'product', blogs: 'blog', categories: 'category' }[contentSubTab] })}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0 text-sm font-medium text-gray-700"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -1157,7 +1163,7 @@ const SEO = () => {
                     <Copy className="w-4 h-4 text-green-700" />
                   </button>
                   <a
-                    href={`${globalSettings.siteUrl?.replace('https://thecrosswild.com', 'http://localhost:5001')}/api/seo/sitemap.xml`}
+                    href={`${globalSettings.siteUrl}/api/seo/sitemap.xml`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 hover:bg-green-200 rounded"

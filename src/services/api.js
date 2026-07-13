@@ -25,9 +25,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminAuth');
-      window.location.href = '/login';
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest && window.location.pathname !== '/login') {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminAuth');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -395,7 +398,6 @@ export const homeProductHighlightsAPI = makeCrudAPI('/home-product-highlights');
 export const homeWhyChooseAPI = makeCrudAPI('/home-why-choose');
 export const processStepsAPI = makeCrudAPI('/process-steps');
 export const categoryHomeCardsAPI = makeCrudAPI('/category-home-cards');
-export const sizeChartsAPI = makeCrudAPI('/size-charts');
 
 // Menus (keyed by string, not Mongo _id)
 export const menusAPI = {
@@ -429,16 +431,6 @@ export const quoteSubmissionsAPI = {
   getAll: async (params = {}) => (await api.get('/quote-submissions', { params })).data,
   updateStatus: async (id, status) => (await api.put(`/quote-submissions/${id}/status`, { status })).data,
   delete: async (id) => (await api.delete(`/quote-submissions/${id}`)).data,
-};
-
-// Health check
-export const healthCheck = async () => {
-  try {
-    const response = await api.get('/health');
-    return response.data;
-  } catch (error) {
-    throw new Error('Backend server is not responding');
-  }
 };
 
 export default api;

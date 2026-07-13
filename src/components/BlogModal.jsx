@@ -35,6 +35,7 @@ const BlogModal = ({ blog, onClose }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingAuthor, setUploadingAuthor] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
@@ -240,6 +241,7 @@ const BlogModal = ({ blog, onClose }) => {
     if (!submitData.author.imageData) delete submitData.author.imageData;
 
     try {
+      setSaving(true);
       if (blog) {
         await updateBlog(blog.id, submitData);
       } else {
@@ -249,6 +251,8 @@ const BlogModal = ({ blog, onClose }) => {
     } catch (error) {
       console.error('Failed to save blog:', error);
       setErrors({ submit: 'Failed to save blog. Please try again.' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -695,9 +699,14 @@ const BlogModal = ({ blog, onClose }) => {
             <button
               type="submit"
               className="flex-1 btn-primary"
-              disabled={uploading || uploadingAuthor}
+              disabled={saving || uploading || uploadingAuthor}
             >
-              {uploading || uploadingAuthor ? (
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : uploading || uploadingAuthor ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Uploading...

@@ -10,15 +10,22 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewing, setViewing] = useState(null);
 
-  useEffect(() => { load(); }, [statusFilter, search]);
+  // Debounce the search input so we don't refetch on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => { load(); }, [statusFilter, debouncedSearch]);
 
   const load = async () => {
     setLoading(true);
     try {
       const [oRes, sRes] = await Promise.all([
-        ordersAPI.getAll({ status: statusFilter || undefined, search: search || undefined }),
+        ordersAPI.getAll({ status: statusFilter || undefined, search: debouncedSearch || undefined }),
         ordersAPI.getStats().catch(() => ({ stats: null })),
       ]);
       setOrders(oRes.orders || []);
@@ -27,13 +34,23 @@ export default function Orders() {
   };
 
   const updateStatus = async (id, status) => {
-    await ordersAPI.updateStatus(id, status);
+    try {
+      await ordersAPI.updateStatus(id, status);
+    } catch (err) {
+      console.error('Failed to update order status:', err);
+      alert('Failed to update order status. Please try again.');
+    }
     load();
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this order? This cannot be undone.')) return;
-    await ordersAPI.delete(id);
+    try {
+      await ordersAPI.delete(id);
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+      alert('Failed to delete order. Please try again.');
+    }
     load();
   };
 

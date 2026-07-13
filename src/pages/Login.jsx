@@ -63,12 +63,14 @@ const Login = () => {
             </div>
           )}
 
-          {/* Demo Credentials Info */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm font-semibold text-blue-800 mb-2">Demo Credentials:</p>
-            <p className="text-sm text-blue-700">Email: admin@thecrosswild.com</p>
-            <p className="text-sm text-blue-700">Password: admin123</p>
-          </div>
+          {/* Demo Credentials Info (dev only) */}
+          {import.meta.env.DEV && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm font-semibold text-blue-800 mb-2">Demo Credentials:</p>
+              <p className="text-sm text-blue-700">Email: admin@thecrosswild.com</p>
+              <p className="text-sm text-blue-700">Password: admin123</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}

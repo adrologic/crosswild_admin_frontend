@@ -27,6 +27,7 @@ export default function SimpleCrudList({
 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -36,23 +37,46 @@ export default function SimpleCrudList({
     try {
       const res = await api.getAll();
       setItems(res[itemsKey] || res.items || []);
+      setLoadError(false);
+    } catch (err) {
+      console.error('Failed to load items:', err);
+      setLoadError(true); // keep previously loaded items
     } finally { setLoading(false); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this item?')) return;
-    await api.delete(id);
+    try {
+      await api.delete(id);
+    } catch (err) {
+      console.error('Failed to delete item:', err);
+      alert('Failed to delete item. Please try again.');
+    }
     load();
   };
 
   const reorder = async (index, dir) => {
     const target = index + dir;
     if (target < 0 || target >= items.length) return;
-    const a = items[index], b = items[target];
-    await Promise.all([
-      api.update(a._id, { order: b.order ?? target }),
-      api.update(b._id, { order: a.order ?? index }),
-    ]);
+    try {
+      const a = items[index], b = items[target];
+      if ((a.order ?? 0) === (b.order ?? 0)) {
+        // Equal/default order values (every new item starts at 0) make a swap a
+        // no-op — the backend sort never changes. Renumber the whole list to its
+        // current on-screen sequence with the two rows swapped.
+        const seq = [...items];
+        [seq[index], seq[target]] = [seq[target], seq[index]];
+        await Promise.all(seq.map((it, i) => api.update(it._id, { order: i })));
+      } else {
+        await Promise.all([
+          api.update(a._id, { order: b.order ?? target }),
+          api.update(b._id, { order: a.order ?? index }),
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to reorder items:', err);
+      alert('Failed to reorder items. Please try again.');
+    }
     load();
   };
 
@@ -78,8 +102,15 @@ export default function SimpleCrudList({
         </div>
       )}
 
+      {!loading && loadError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between gap-3 text-sm text-red-700">
+          <span>Failed to load items.</span>
+          <button onClick={load} className="font-semibold underline hover:text-red-900">Retry</button>
+        </div>
+      )}
+
       {loading ? <div className={embedded ? 'text-sm text-gray-500' : 'card text-center text-gray-500'}>Loading…</div>
-       : items.length === 0 ? <div className={embedded ? 'text-sm text-gray-400' : 'card text-center text-gray-500'}>No items yet.</div>
+       : items.length === 0 ? (loadError ? null : <div className={embedded ? 'text-sm text-gray-400' : 'card text-center text-gray-500'}>No items yet.</div>)
        : (
         <div className="space-y-2">
           {items.map((it, i) => (
@@ -214,6 +245,19 @@ function FieldEditor({ field, value, onChange, imageCategory }) {
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1">{label}{required ? ' *' : ''}</label>
         <textarea value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={4} className="input-field" />
+      </div>
+    );
+  }
+  if (type === 'select') {
+    // Fixed-choice dropdown for backend enum fields (free text would 400 on save)
+    return (
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1">{label}{required ? ' *' : ''}</label>
+        <select value={value || ''} onChange={(e) => onChange(e.target.value)} className="input-field">
+          {(field.options || []).map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
       </div>
     );
   }

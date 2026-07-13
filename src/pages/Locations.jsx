@@ -837,7 +837,7 @@ const Locations = () => {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-1 justify-end">
                       <a
-                        href={`https://the-cross-wild.vercel.app/${loc.slug}`}
+                        href={`https://thecrosswild.com/${loc.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"

@@ -84,8 +84,11 @@ function DealModal({ deal, onClose, onSaved }) {
     setSaving(true); setError('');
     try {
       const payload = { ...form };
-      if (!payload.startsAt) delete payload.startsAt;
-      if (!payload.endsAt) delete payload.endsAt;
+      // Blank date inputs must be sent as explicit nulls on update — deleting
+      // the keys makes findByIdAndUpdate keep the OLD dates, so a deal's
+      // start/end window could never be cleared once set.
+      payload.startsAt = payload.startsAt || null;
+      payload.endsAt = payload.endsAt || null;
       if (deal?._id) await dealsAPI.update(deal._id, payload);
       else await dealsAPI.create(payload);
       onSaved();
