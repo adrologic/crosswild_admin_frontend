@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-// API Base URL - uses VITE_API_URL from .env locally, falls back to production URL on Vercel
-const API_URL = import.meta.env.VITE_API_URL || 'https://crosswild-backend-p5l3.onrender.com/api';
+// API Base URL — VITE_API_URL from .env locally (full backend URL, since the Vite
+// dev server has no proxy). Unset on Vercel, where it falls back to the relative
+// /api and vercel.json rewrites that to the backend. Going through the rewrite
+// keeps the browser on same-origin HTTPS, so an http-only backend doesn't get
+// blocked as mixed content, and there is no CORS preflight to configure.
+// Never fall back to a hardcoded backend here — that silently writes to whichever
+// database that URL happens to point at.
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Create axios instance with default config
 const api = axios.create({
