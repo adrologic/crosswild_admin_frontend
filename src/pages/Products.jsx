@@ -119,7 +119,13 @@ const Products = () => {
 
   // ─── Filter products ───
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    // Buyers message "price for CW1482" — staff must be able to paste the code
+    // straight into this box and land on the product.
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      product.name?.toLowerCase().includes(q) ||
+      product.sku?.toLowerCase().includes(q);
 
     let matchesCategory = true;
     if (selectedCategory !== 'all') {
@@ -238,7 +244,7 @@ const Products = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search by product name or code (e.g. CW1482)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field pl-10"
@@ -277,7 +283,14 @@ const Products = () => {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-800 truncate">{product.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-800 truncate">{product.name}</p>
+                              {product.sku && (
+                                <span className="flex-shrink-0 px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md font-mono text-[11px] font-semibold tracking-wide">
+                                  {product.sku}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-gray-500 line-clamp-1">{product.description}</p>
                           </div>
                         </div>

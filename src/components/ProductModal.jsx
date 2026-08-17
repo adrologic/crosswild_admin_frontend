@@ -1270,18 +1270,35 @@ const ProductModal = ({ product, onClose }) => {
             <SectionHeader icon={Search} title="SEO & Meta Tags" subtitle="Search engine optimization settings (like old site format + advanced)" />
 
             <div className="space-y-4">
-              {/* SKU */}
+              {/* Product code — issued by the backend, permanent, read-only.
+                  Buyers quote it back over WhatsApp, so it must never change
+                  once a customer has seen it. */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  SKU
+                  Product Code
                 </label>
-                <input
-                  type="text"
-                  value={formData.sku}
-                  onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-400 transition-all"
-                  placeholder="e.g., TCWT002"
-                />
+                {formData.sku ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-mono text-sm font-semibold text-gray-800 tracking-wide">
+                      {formData.sku}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyTrackingCode(formData.sku)}
+                      className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                      title="Copy product code"
+                    >
+                      {copiedCode ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="px-4 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500">
+                    Assigned automatically when you save
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-gray-400">
+                  Issued once and never changed — customers quote this code when they enquire.
+                </p>
               </div>
 
               {/* SEO URL / Slug */}
