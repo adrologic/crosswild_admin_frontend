@@ -318,7 +318,7 @@ const Products = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex flex-wrap gap-1">
-                          {product.bestSeller && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold">Best Seller</span>}
+                          {product.bestSeller && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold">Promotional Products</span>}
                           {product.newArrival && <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">New</span>}
                           {product.featured && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">Featured</span>}
                           {product.mostPopular && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded-full text-[10px] font-bold">Popular</span>}

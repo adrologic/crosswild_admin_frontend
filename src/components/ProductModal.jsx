@@ -1110,7 +1110,7 @@ const ProductModal = ({ product, onClose }) => {
 
             <div className="flex flex-wrap gap-2">
               {[
-                { name: 'bestSeller', label: 'Best Seller' },
+                { name: 'bestSeller', label: 'Promotional Products' },
                 { name: 'newArrival', label: 'New Arrival' },
                 { name: 'featured', label: 'Featured' },
                 { name: 'mostPopular', label: 'Most Popular' },
