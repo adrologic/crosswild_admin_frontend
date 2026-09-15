@@ -256,13 +256,13 @@ const Products = () => {
       {/* Products Table */}
       <div className="card">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full table-fixed">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-600">Product</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-600">Categories</th>
-                <th className="text-left py-4 px-4 text-sm font-semibold text-gray-600">Badges</th>
-                <th className="text-right py-4 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                <th className="w-[38%] text-left py-4 px-4 text-sm font-semibold text-gray-600">Product</th>
+                <th className="w-[26%] text-left py-4 px-4 text-sm font-semibold text-gray-600">Categories</th>
+                <th className="w-[20%] text-left py-4 px-4 text-sm font-semibold text-gray-600">Badges</th>
+                <th className="w-[16%] text-right py-4 px-4 text-sm font-semibold text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody>
