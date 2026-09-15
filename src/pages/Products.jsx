@@ -321,7 +321,6 @@ const Products = () => {
                           {product.bestSeller && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold">Best Seller</span>}
                           {product.newArrival && <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">New</span>}
                           {product.featured && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">Featured</span>}
-                          {product.trending && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">Trending</span>}
                           {product.mostPopular && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded-full text-[10px] font-bold">Popular</span>}
                         </div>
                       </td>

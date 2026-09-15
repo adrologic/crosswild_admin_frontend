@@ -1113,7 +1113,6 @@ const ProductModal = ({ product, onClose }) => {
                 { name: 'bestSeller', label: 'Best Seller' },
                 { name: 'newArrival', label: 'New Arrival' },
                 { name: 'featured', label: 'Featured' },
-                { name: 'trending', label: 'Trending' },
                 { name: 'mostPopular', label: 'Most Popular' },
               ].map(badge => (
                 <button
